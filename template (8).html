@@ -1,0 +1,198 @@
+<html>
+<head>
+<img src="https://cdn1.iconfinder.com/data/icons/arrow-button-solid/32/Right_Arrow_Button_1-512.png" height="30">
+<a href="https://learn.algoritmika.org/main" target="_blank">Вернуться на алгоритмику</a>
+<h3>Правила: Запрещены маты, запрещён 18+ контент, запрещены оскорбления</h3>
+<p style="color: gray;">версия 0.1</p>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Система комментариев с LocalStorage</title>
+    <style>
+        .comment-box {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .author-name {
+            font-weight: bold;
+        }
+        .timestamp {
+            color: grey;
+            font-size: smaller;
+        }
+    </style>
+</head>
+<body>
+    <h1>Чатик (Комментарии появятся после того как вы напишите свой)</h1>
+
+    <!-- Контейнер для комментариев -->
+    <div id="commentsContainer"></div>
+
+    <!-- Форма добавления нового комментария -->
+    <form id="commentForm">
+        Ваше имя:<br>
+        <input type="text" id="authorName" placeholder="Имя" required><br>
+        Ваш комментарий:<br>
+        <textarea id="commentContent" rows="4" cols="50" placeholder="Напишите сообщение..." required></textarea><br>
+        <button type="submit">Отправить комментарий</button>
+    </form>
+
+    <script>
+        // Функция для рендеринга комментариев
+        function renderComments() {
+            let comments = JSON.parse(localStorage.getItem('comments')) || [];
+            let container = document.getElementById('commentsContainer');
+            container.innerHTML = '';
+
+            comments.forEach(comment => {
+                let commentDiv = document.createElement('div');
+                commentDiv.classList.add('comment-box');
+                commentDiv.innerHTML = `
+                    <span class="author-name">${comment.author}</span><br>
+                    <span class="timestamp">${new Date().toLocaleString()}</span><br>
+                    ${comment.content}`;
+                container.appendChild(commentDiv);
+            });
+        }
+
+        // Сохраняем комментарий в localStorage
+        function saveComment(author, content) {
+            let comments = JSON.parse(localStorage.getItem('comments')) || [];
+            comments.push({ author, content });
+            localStorage.setItem('comments', JSON.stringify(comments));
+        }
+
+        // Загружаем комментарии при открытии страницы
+        window.onload = () => {
+            renderComments();
+        };
+
+        // Отправляем комментарий
+        document.getElementById('commentForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const author = document.getElementById('authorName').value.trim();
+            const content = document.getElementById('commentContent').value.trim();
+
+            if (!author || !content) return alert("Заполните все поля!");
+
+            saveComment(author, content);
+            renderComments();
+
+            // Очищаем форму
+            document.getElementById('authorName').value = '';
+            document.getElementById('commentContent').value = '';
+        });
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Выкладывание картинок с описанием</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: Arial, Helvetica, sans-serif; }
+        .gallery-item {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .gallery-image {
+            max-width: 150px;
+            object-fit: cover;
+            margin-right: 10px;
+        }
+        .description {
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <h1>Зал славы</h1>
+
+    <!-- Контейнер для галереи -->
+    <div id="galleryContainer"></div>
+
+    <!-- Форма добавления проекта -->
+    <form id="projectForm">
+        Выбрать картинку:<br>
+        <input type="file" id="imageInput" accept="image/*" required><br>
+        Описание проекта:<br>
+        <textarea id="descriptionInput" rows="4" cols="50" placeholder="Описание вашего проекта..."></textarea><br>
+        <button type="submit">Добавить проект</button>
+    </form>
+
+    <script>
+        // Рендеринг галереи
+        function renderGallery() {
+            let projects = JSON.parse(localStorage.getItem('projects')) || [];
+            let gallery = document.getElementById('galleryContainer');
+            gallery.innerHTML = ''; // Очистка текущего содержимого
+
+            projects.forEach(project => {
+                let item = document.createElement('div');
+                item.classList.add('gallery-item');
+                item.innerHTML = `
+                    <img class="gallery-image" src="${project.image}" alt="Проект">
+                    <div>
+                        <strong>Название:</strong> ${project.name}<br>
+                        <span class="description">${project.description}</span>
+                    </div>
+                `;
+                gallery.appendChild(item);
+            });
+        }
+
+        // Сохранение проекта в LocalStorage
+        function saveProject(name, description, imageSrc) {
+            let projects = JSON.parse(localStorage.getItem('projects')) || [];
+            projects.push({
+                name,
+                description,
+                image: imageSrc
+            });
+            localStorage.setItem('projects', JSON.stringify(projects));
+        }
+
+        // Отображаем галерею при загрузке страницы
+        window.onload = () => {
+            renderGallery();
+        };
+
+        // Обрабатываем отправку формы
+        document.getElementById('projectForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const fileInput = document.getElementById('imageInput');
+            const description = document.getElementById('descriptionInput').value.trim();
+
+            if (!fileInput.files.length || !description) return alert("Заполните все поля!");
+
+            try {
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+
+                reader.readAsDataURL(file);
+                reader.onload = () => {
+                    const base64Image = reader.result;
+                    saveProject(file.name, description, base64Image);
+                    renderGallery();
+
+                    // Очищаем форму
+                    fileInput.value = null;
+                    document.getElementById('descriptionInput').value = '';
+                };
+            } catch (err) {
+                console.error(err);
+                alert("Ошибка при обработке файла.");
+            }
+        });
+    </script>
+</body>
+</html>
